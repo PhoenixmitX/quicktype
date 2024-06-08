@@ -70,24 +70,6 @@ export class Scala3Renderer extends ConvenienceRenderer {
         this.emitCommentLines(lines, { lineStart: " * ", beforeComment: "/**", afterComment: " */" });
     }
 
-    protected emitBlock(
-        line: Sourcelike,
-        f: () => void,
-        delimiter: "curly" | "paren" | "lambda" | "none" = "curly"
-    ): void {
-        const [open, close] =
-            delimiter === "curly"
-                ? ["{", "}"]
-                : delimiter === "paren"
-                  ? ["(", ")"]
-                  : delimiter === "none"
-                    ? ["", ""]
-                    : ["{", "})"];
-        this.emitLine(line, " ", open);
-        this.indent(f);
-        this.emitLine(close);
-    }
-
     protected anySourceType(optional: boolean): Sourcelike {
         return [wrapOption("Any", optional)];
     }
@@ -181,7 +163,7 @@ export class Scala3Renderer extends ConvenienceRenderer {
         };
 
         this.emitDescription(this.descriptionForType(c));
-        this.emitLine("case class ", className, " (");
+        this.emitLine("case class ", className, "(");
         this.indent(() => {
             let count = c.getProperties().size;
             let first = true;
@@ -209,7 +191,7 @@ export class Scala3Renderer extends ConvenienceRenderer {
                 this.emitLine(
                     "val ",
                     nameWithBackticks,
-                    " : ",
+                    ": ",
                     scalaType(p),
                     p.isOptional ? " = None" : nullableOrOptional ? " = None" : "",
                     last ? "" : ","
@@ -230,40 +212,40 @@ export class Scala3Renderer extends ConvenienceRenderer {
         this.emitLine(")");
     }
 
+    protected emitEnumHeader(enumName: Name): void {
+        this.emitLine("enum ", enumName, ":");
+    }
+
     protected emitEnumDefinition(e: EnumType, enumName: Name): void {
         this.emitDescription(this.descriptionForType(e));
 
-        this.emitBlock(
-            ["enum ", enumName, " : "],
-            () => {
-                let count = e.cases.size;
-                if (count > 0) {
-                    this.emitItem("\t case ");
-                }
+        this.emitEnumHeader(enumName);
+        this.indent(() => {
+            let count = e.cases.size;
+            if (count > 0) {
+                this.emitItem("\tcase ");
+            }
 
-                this.forEachEnumCase(e, "none", (name, jsonName) => {
-                    if (!(jsonName == "")) {
-                        const backticks =
-                            shouldAddBacktick(jsonName) ||
-                            jsonName.includes(" ") ||
-                            !isNaN(parseInt(jsonName.charAt(0)));
-                        if (backticks) {
-                            this.emitItem("`");
-                        }
-
-                        this.emitItemOnce([name]);
-                        if (backticks) {
-                            this.emitItem("`");
-                        }
-
-                        if (--count > 0) this.emitItem([","]);
-                    } else {
-                        --count;
+            this.forEachEnumCase(e, "none", (name, jsonName) => {
+                if (!(jsonName == "")) {
+                    const backticks =
+                        shouldAddBacktick(jsonName) || jsonName.includes(" ") || !isNaN(parseInt(jsonName.charAt(0)));
+                    if (backticks) {
+                        this.emitItem("`");
                     }
-                });
-            },
-            "none"
-        );
+
+                    this.emitItemOnce([name]);
+                    if (backticks) {
+                        this.emitItem("`");
+                    }
+
+                    if (--count > 0) this.emitItem([","]);
+                } else {
+                    --count;
+                }
+            });
+        });
+        this.ensureBlankLine();
     }
 
     protected emitUnionDefinition(u: UnionType, unionName: Name): void {

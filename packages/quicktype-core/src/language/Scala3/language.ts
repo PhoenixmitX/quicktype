@@ -5,12 +5,14 @@ import { assertNever } from "../../support/Support";
 import { TargetLanguage } from "../../TargetLanguage";
 import { type FixMeOptionsAnyType, type FixMeOptionsType } from "../../types";
 
+import { BorerRenderer } from "./BorerRenderer";
 import { CirceRenderer } from "./CirceRenderer";
 import { Scala3Renderer } from "./Scala3Renderer";
 import { UpickleRenderer } from "./UpickleRenderer";
 
 export enum Framework {
     None = "None",
+    Borer = "Borer",
     Upickle = "Upickle",
     Circe = "Circe"
 }
@@ -21,6 +23,7 @@ export const scala3Options = {
         "Serialization framework",
         [
             ["just-types", Framework.None],
+            ["borer", Framework.Borer],
             ["circe", Framework.Circe],
             ["upickle", Framework.Upickle]
         ],
@@ -52,6 +55,8 @@ export class Scala3TargetLanguage extends TargetLanguage {
         switch (options.framework) {
             case Framework.None:
                 return new Scala3Renderer(this, renderContext, options);
+            case Framework.Borer:
+                return new BorerRenderer(this, renderContext, options);
             case Framework.Upickle:
                 return new UpickleRenderer(this, renderContext, options);
             case Framework.Circe:

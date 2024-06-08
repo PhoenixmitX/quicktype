@@ -40,7 +40,7 @@ export class CirceRenderer extends Scala3Renderer {
     protected emitEmptyClassDefinition(c: ClassType, className: Name): void {
         this.emitDescription(this.descriptionForType(c));
         this.ensureBlankLine();
-        this.emitLine("case class ", className, "()  derives Encoder.AsObject, Decoder");
+        this.emitLine("case class ", className, "() derives Encoder.AsObject, Decoder");
     }
 
     protected anySourceType(optional: boolean): Sourcelike {
@@ -85,13 +85,13 @@ export class CirceRenderer extends Scala3Renderer {
 
         this.emitLine("// For serialising string unions");
         this.emitLine(
-            "given [A <: Singleton](using A <:< String): Decoder[A] = Decoder.decodeString.emapTry(x => Try(x.asInstanceOf[A])) "
+            "given [A <: Singleton](using A <:< String): Decoder[A] = Decoder.decodeString.emapTry(x => Try(x.asInstanceOf[A]))"
         );
         this.emitLine(
-            "given [A <: Singleton](using ev: A <:< String): Encoder[A] = Encoder.encodeString.contramap(ev) "
+            "given [A <: Singleton](using ev: A <:< String): Encoder[A] = Encoder.encodeString.contramap(ev)"
         );
         this.ensureBlankLine();
-        this.emitLine("// If a union has a null in, then we'll need this too... ");
+        this.emitLine("// If a union has a null in, then we'll need this too...");
         this.emitLine("type NullValue = None.type");
     }
 
@@ -99,9 +99,9 @@ export class CirceRenderer extends Scala3Renderer {
         super.emitTopLevelArray(t, name);
         const elementType = this.scalaType(t.items);
         this.emitLine([
-            "given (using ev : ",
+            "given (using ev: ",
             elementType,
-            "): Encoder[Map[String,",
+            "): Encoder[Map[String, ",
             elementType,
             "]] = Encoder.encodeMap[String, ",
             elementType,
@@ -180,7 +180,7 @@ export class CirceRenderer extends Scala3Renderer {
                     this.emitLine([
                         "case ",
                         paramTemp,
-                        " : ",
+                        ": ",
                         t[0],
                         " => ",
                         this.circeEncoderForType(t[1], false, false, paramTemp)
